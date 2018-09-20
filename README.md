@@ -1,1 +1,1 @@
-# phenological-temporal-segmentation
+# Spatio-Temporal Vegetation Segmentation By Using Convolutional Networks
