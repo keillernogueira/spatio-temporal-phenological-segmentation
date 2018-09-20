@@ -1,0 +1,6 @@
+*
+!.gitignore
+!temporal_segmentation.py
+!temporal_segmentation_cycle.py
+!temporal_segmentation_ecoInfo.py
+!README.md
