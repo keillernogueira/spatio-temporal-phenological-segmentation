@@ -2,6 +2,7 @@ import random
 import sys
 import os
 import math
+import datetime
 from PIL import Image
 import numpy as np
 import tensorflow as tf
@@ -27,16 +28,16 @@ class BatchColors:
 
 
 def print_params(list_params):
-    print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-    for i in xrange(1, len(sys.argv)):
-        print list_params[i - 1] + '= ' + sys.argv[i]
-    print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    for i in range(1, len(sys.argv)):
+        print(list_params[i - 1] + '= ' + sys.argv[i])
+    print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
 
 def select_batch(shuffle, batch_size, it, total_size):
     batch = shuffle[it:min(it + batch_size, total_size)]
     if min(it + batch_size, total_size) == total_size or total_size == it + batch_size:
-        shuffle = np.asarray(random.sample(xrange(total_size), total_size))
+        shuffle = np.asarray(random.sample(range(total_size), total_size))
         # print "in", shuffle
         it = 0
         if len(batch) < batch_size:
@@ -85,14 +86,24 @@ def manipulate_border_array(data, crop_size):
 
 
 def normalize_images(data, mean_full, std_full):
-    for i in xrange(len(data)):
-        data[i, :, :, :, 0] = np.subtract(data[i, :, :, :, 0], mean_full[i, 0])
-        data[i, :, :, :, 1] = np.subtract(data[i, :, :, :, 1], mean_full[i, 1])
-        data[i, :, :, :, 2] = np.subtract(data[i, :, :, :, 2], mean_full[i, 2])
+    if mean_full.ndim >= 2:
+        for i in range(len(data)):
+            data[i, :, :, :, 0] = np.subtract(data[i, :, :, :, 0], mean_full[i, 0])
+            data[i, :, :, :, 1] = np.subtract(data[i, :, :, :, 1], mean_full[i, 1])
+            data[i, :, :, :, 2] = np.subtract(data[i, :, :, :, 2], mean_full[i, 2])
 
-        data[i, :, :, :, 0] = np.divide(data[i, :, :, :, 0], std_full[i, 0])
-        data[i, :, :, :, 1] = np.divide(data[i, :, :, :, 1], std_full[i, 1])
-        data[i, :, :, :, 2] = np.divide(data[i, :, :, :, 2], std_full[i, 2])
+            data[i, :, :, :, 0] = np.divide(data[i, :, :, :, 0], std_full[i, 0])
+            data[i, :, :, :, 1] = np.divide(data[i, :, :, :, 1], std_full[i, 1])
+            data[i, :, :, :, 2] = np.divide(data[i, :, :, :, 2], std_full[i, 2])
+    else:
+        for i in range(len(data)):
+            data[i, :, :, :, 0] = np.subtract(data[i, :, :, :, 0], mean_full[0])
+            data[i, :, :, :, 1] = np.subtract(data[i, :, :, :, 1], mean_full[1])
+            data[i, :, :, :, 2] = np.subtract(data[i, :, :, :, 2], mean_full[2])
+
+            data[i, :, :, :, 0] = np.divide(data[i, :, :, :, 0], std_full[0])
+            data[i, :, :, :, 1] = np.divide(data[i, :, :, :, 1], std_full[1])
+            data[i, :, :, :, 2] = np.divide(data[i, :, :, :, 2], std_full[2])
 
 
 def compute_image_mean(data):
@@ -103,21 +114,21 @@ def compute_image_mean(data):
 
 
 def calculate_mean_and_std(data, indexes, crop_size):
-    mean_full = [[[] for i in range(0)] for i in xrange(len(data))]
-    std_full = [[[] for i in range(0)] for i in xrange(len(data))]
+    mean_full = [[[] for i in range(0)] for i in range(len(data))]
+    std_full = [[[] for i in range(0)] for i in range(len(data))]
     mask = int(crop_size / 2)
 
-    for cur_map in xrange(len(data)):
+    for cur_map in range(len(data)):
         all_patches = []
-        for i in xrange(len(indexes)):
+        for i in range(len(indexes)):
             cur_x = indexes[i][0]
             cur_y = indexes[i][1]
 
             patches = data[cur_map, (cur_x + mask) - mask:(cur_x + mask) + mask + 1,
-                      (cur_y + mask) - mask:(cur_y + mask) + mask + 1, :]
+                           (cur_y + mask) - mask:(cur_y + mask) + mask + 1, :]
             if len(patches) != crop_size or len(patches[1]) != crop_size:
-                print BatchColors.FAIL + "Error! Current patch size: " + str(len(patches)) + "x" + \
-                      str(len(patches[0])) + BatchColors.ENDC
+                print(BatchColors.FAIL + "Error! Current patch size: " + str(len(patches)) + "x" + \
+                      str(len(patches[0])) + BatchColors.ENDC)
                 return
 
             all_patches.append(patches)
@@ -136,16 +147,16 @@ def load_images(path,  crop_size, instances):
 
     for name in instances:
         try:
-            img = img_as_float(scipy.misc.imread(path + name))
+            img = img_as_float(scipy.misc.imread(os.path.join(path, name)))
         except IOError:
-            print BatchColors.FAIL + "Could not open file: ", path + name + BatchColors.ENDC
+            print(BatchColors.FAIL + "Could not open file: ", path + name + BatchColors.ENDC)
 
         data.append(manipulate_border_array(img, crop_size))
 
     try:
-        img = scipy.misc.imread(path + "mask_gray.tif")
+        img = scipy.misc.imread(os.path.join(path, "mask_train_test_int.png"))
     except IOError:
-        print BatchColors.FAIL + "Could not open file: ", path + "mask_gray.tif" + BatchColors.ENDC
+        print(BatchColors.FAIL + "Could not open file: ", path + "mask_train_test_int.png" + BatchColors.ENDC)
 
     mask = img
 
@@ -153,22 +164,32 @@ def load_images(path,  crop_size, instances):
 
 
 def create_distributions_over_pixel_classes(labels):
-    classes = [[[] for i in range(0)] for i in range(NUM_CLASSES)]
-    nonclasses = []
+    training_instances = [[[] for i in range(0)] for i in range(NUM_CLASSES)]
+    testing_instances = [[[] for i in range(0)] for i in range(NUM_CLASSES)]
+    no_classes_instances = []
 
     w, h = labels.shape
 
-    for i in xrange(0, w):
-        for j in xrange(0, h):
-            if labels[i, j] != 4:
-                classes[labels[i, j]].append((i, j))
+    for i in range(0, w):
+        for j in range(0, h):
+            if labels[i, j] != 8:
+                if labels[i, j] == 0 or labels[i, j] == 1 or labels[i, j] == 2 or labels[i, j] == 3:
+                    training_instances[labels[i, j]].append((i, j))
+                else:
+                    testing_instances[labels[i, j]-4].append((i, j))
             else:
-                nonclasses.append((i, j))
+                no_classes_instances.append((i, j))
 
-    for i in xrange(len(classes)):
-        print BatchColors.OKBLUE + "Class " + str(i) + " = " + str(len(classes[i])) + BatchColors.ENDC
-    print BatchColors.OKBLUE + 'Non class = ' + str(len(nonclasses)) + BatchColors.ENDC
-    return classes, nonclasses
+    for i in range(len(training_instances)):
+        print(BatchColors.OKBLUE + "Training class " + str(i) + " = " + str(len(training_instances[i])) + BatchColors.ENDC)
+        print(BatchColors.OKBLUE + "Testing class " + str(i) + " = " + str(len(testing_instances[i])) + BatchColors.ENDC)
+    print(BatchColors.OKBLUE + 'No class = ' + str(len(no_classes_instances)) + BatchColors.ENDC)
+
+    train_data = np.asarray(training_instances[0] + training_instances[1] +
+                            training_instances[2] + training_instances[3])
+    test_data = np.asarray(testing_instances[0] + testing_instances[1] +
+                           testing_instances[2] + testing_instances[3])
+    return train_data, test_data, no_classes_instances
 
 
 def dynamically_create_patches(data, mask_data, crop_size, class_distribution, shuffle):
@@ -191,12 +212,14 @@ def dynamically_create_patches(data, mask_data, crop_size, class_distribution, s
         patch = data[:, (cur_x + mask) - mask:(cur_x + mask) + mask + 1,
                      (cur_y + mask) - mask:(cur_y + mask) + mask + 1, :]
         current_class = mask_data[cur_x, cur_y]
+        if current_class > 3:
+            current_class = current_class - 4
 
-        if len(patch[0]) != crop_size or len(patch[1]) != crop_size:
-            print "Error: Current patch size ", len(patch), len(patch[0])
+        if len(patch[0]) != crop_size or len(patch[0][0]) != crop_size:
+            print("Error: Current patch size ", len(patch[0]), len(patch[0][0]))
             return
-        if current_class != 0 and current_class != 1 and current_class != 2 and current_class != 3 and current_class != 4:
-            print "Error: Current class is mistaken", current_class
+        if current_class != 0 and current_class != 1 and current_class != 2 and current_class != 3:
+            print("Error: Current class is mistaken", current_class)
             return
 
         if i < len(class_distribution):
@@ -231,8 +254,8 @@ def create_prediction_map(output_path, new_labels, new_logits_map):
     im_array = np.empty([h, w, 3], dtype=np.uint8)
     im_array_prob = np.empty([h, w, 3], dtype=np.uint8)
 
-    for i in xrange(h):
-        for j in xrange(w):
+    for i in range(h):
+        for j in range(w):
             color = class_to_color(int(new_labels[i, j]))
             im_array[i, j, :] = color
             im_array_prob[i, j, :] = (np.asarray(color) * new_logits_map[i, j, int(new_labels[i, j])]).astype(int)
@@ -334,7 +357,7 @@ def convnet_initial(x, dropout, is_training, weight_decay, crop_size, name_prefi
 def convnet_25_temporal(x, dropout, is_training, crop_size, weight_decay):
     pools = []
 
-    for i in xrange(x.get_shape()[0]):
+    for i in range(x.get_shape()[0]):
         pools.append(convnet_initial(x[i], dropout, is_training, weight_decay, crop_size, 'time_' + str(i)))
 
     # conv1 = _conv_layer(x, [4, 4, 3, 64], 'ft_conv1', weight_decay, is_training, pad='VALID')
@@ -345,7 +368,7 @@ def convnet_25_temporal(x, dropout, is_training, crop_size, weight_decay):
     except:
         pool_concat = tf.concat(concat_dim=3, values=pools)
 
-    conv2 = _conv_layer(pool_concat, [4, 4, 64*x.get_shape()[0], 128], 'ft_conv2', weight_decay,
+    conv2 = _conv_layer(pool_concat, [4, 4, 64*int(x.get_shape()[0]), 128], 'ft_conv2', weight_decay,
                         is_training, pad='VALID', is_normal_conv=True, activation='lrelu')
     pool2 = _max_pool(conv2, kernel=[1, 2, 2, 1], strides=[1, 2, 2, 1], name='ft_pool2', pad='VALID')
 
@@ -421,7 +444,7 @@ def validate(sess, data, labels, test_distribution, crop_size, mean_full, std_fu
             cm_test[by[j]][preds_val[j]] += 1
 
     _sum = 0.0
-    for i in xrange(len(cm_test)):
+    for i in range(len(cm_test)):
         _sum += (cm_test[i][i] / float(np.sum(cm_test[i])) if np.sum(cm_test[i]) != 0 else 0)
 
     print("---- Iter " + str(step) + " -- Validate: Overall Accuracy= " + str(int(true_count)) +
@@ -439,8 +462,8 @@ def train(data, labels, training_distribution, test_distribution, mean_full, std
     # TRAIN NETWORK
     ###################
     display_step = 50
-    epoch_number = 5000  # int(len(training_classes)/batch_size) # 1 epoch = images / batch
-    val_inteval = 5000  # int(len(training_classes)/batch_size)
+    epoch_number = 1000  # int(len(training_classes)/batch_size) # 1 epoch = images / batch
+    val_inteval = 1000  # int(len(training_classes)/batch_size)
     # print '1 epoch every %s iterations' % str(epoch_number)
     # print '1 validation every %s iterations' % str(val_inteval)
     # display_step = math.ceil(int(len(training_classes)/batch_size)*0.01)
@@ -453,7 +476,7 @@ def train(data, labels, training_distribution, test_distribution, mean_full, std
 
     # Initializing the variables
     init = tf.initialize_all_variables()
-    shuffle = np.asarray(random.sample(xrange(3 * len(training_distribution)), 3 * len(training_distribution)))
+    shuffle = np.asarray(random.sample(range(3 * len(training_distribution)), 3 * len(training_distribution)))
 
     tfconfig = tf.ConfigProto(allow_soft_placement=True)
     tfconfig.gpu_options.allow_growth = True
@@ -462,11 +485,11 @@ def train(data, labels, training_distribution, test_distribution, mean_full, std
     with tf.Session(config=tfconfig) as sess:
         if 'model' in model_path:
             current_iter = int(model_path.split('_')[-1])
-            print BatchColors.OKBLUE + 'Model restored from ' + model_path + BatchColors.ENDC
+            print(BatchColors.OKBLUE + 'Model restored from ' + model_path + BatchColors.ENDC)
             saver_restore.restore(sess, model_path)
         else:
             sess.run(init)
-            print BatchColors.OKBLUE + 'Model totally initialized!' + BatchColors.ENDC
+            print(BatchColors.OKBLUE + 'Model totally initialized!' + BatchColors.ENDC)
 
         # aux variables
         it = 0
@@ -475,7 +498,7 @@ def train(data, labels, training_distribution, test_distribution, mean_full, std
         batch_cm_train = np.zeros((NUM_CLASSES, NUM_CLASSES), dtype=np.uint32)
 
         # Keep training until reach max iterations
-        for step in xrange(current_iter, niter + 1):
+        for step in range(current_iter, niter + 1):
             shuffle, batch, it = select_batch(shuffle, batch_size, it, 3 * len(training_distribution))
 
             b_x, batch_y = dynamically_create_patches(data, labels, crop_size, training_distribution, batch)
@@ -497,11 +520,12 @@ def train(data, labels, training_distribution, test_distribution, mean_full, std
                     batch_cm_train[batch_y[j]][batch_predcs[j]] += 1
 
                 _sum = 0.0
-                for i in xrange(len(batch_cm_train)):
+                for i in range(len(batch_cm_train)):
                     _sum += (batch_cm_train[i][i] / float(np.sum(batch_cm_train[i])) if np.sum(
                         batch_cm_train[i]) != 0 else 0)
 
-                print("Iter " + str(step) + " -- Training Minibatch: Loss= " + "{:.6f}".format(batch_loss) +
+                print("Iter " + str(step) + " -- Time " + str(datetime.datetime.now().time()) +
+                      " -- Training Minibatch: Loss= " + "{:.6f}".format(batch_loss) +
                       " Absolut Right Pred= " + str(int(batch_correct)) +
                       " Overall Accuracy= " + "{:.4f}".format(batch_correct / float(len(batch_y))) +
                       " Normalized Accuracy= " + "{:.4f}".format(_sum / float(NUM_CLASSES)) +
@@ -511,7 +535,7 @@ def train(data, labels, training_distribution, test_distribution, mean_full, std
 
             if step % epoch_number == 0:
                 _sum = 0.0
-                for i in xrange(len(epoch_cm_train)):
+                for i in range(len(epoch_cm_train)):
                     _sum += (epoch_cm_train[i][i] / float(np.sum(epoch_cm_train[i])) if np.sum(
                         epoch_cm_train[i]) != 0 else 0)
 
@@ -530,7 +554,7 @@ def train(data, labels, training_distribution, test_distribution, mean_full, std
                 validate(sess, data, labels, test_distribution, crop_size, mean_full, std_full,
                          n_input_data, batch_size, x, y, keep_prob, is_training, pred, acc_mean, step)
 
-        print BatchColors.OKGREEN + "Optimization Finished!" + BatchColors.ENDC
+        print(BatchColors.OKGREEN + "Optimization Finished!" + BatchColors.ENDC)
 
         # Test: Final
         saver.save(sess, output_path + 'model', global_step=step)
@@ -545,8 +569,8 @@ def full_test(data, labels, non_classified_pixels_distribution, mean_full, std_f
     h, w = labels.shape
     new_labels = labels
     new_logits_map = np.zeros([h, w, NUM_CLASSES], dtype=np.float32)
-    for i in xrange(h):
-        for j in xrange(w):
+    for i in range(h):
+        for j in range(w):
             if labels[i, j] != 4:
                 new_logits_map[i, j, labels[i, j]] = 1.0
 
@@ -555,10 +579,10 @@ def full_test(data, labels, non_classified_pixels_distribution, mean_full, std_f
 
     with tf.Session() as sess:
         # current_iter = int(model_path.split('_')[-1])
-        print BatchColors.OKBLUE + 'Model restored from ' + model_path + BatchColors.ENDC
+        print(BatchColors.OKBLUE + 'Model restored from ' + model_path + BatchColors.ENDC)
         saver_restore.restore(sess, model_path)
 
-        for i in xrange(0, ((len(non_classified_pixels_distribution) / batch_size)
+        for i in range(0, ((len(non_classified_pixels_distribution) / batch_size)
                             if (len(non_classified_pixels_distribution) % batch_size) == 0
                             else (len(non_classified_pixels_distribution) / batch_size) + 1)):
             batch = list_index[i * batch_size:min(i * batch_size + batch_size, len(non_classified_pixels_distribution))]
@@ -591,6 +615,45 @@ def full_test(data, labels, non_classified_pixels_distribution, mean_full, std_f
     tf.reset_default_graph()
 
 
+def testing_per_map(data, labels, class_dist, instances, mean_full, std_full,
+                    x, y, keep_prob, dropout, is_training, n_input_data, logits, pred,
+                    batch_size, crop_size, model_path, output_path):
+    list_index = np.arange(len(class_dist))
+    saver_restore = tf.train.Saver()
+    first = True
+
+    with tf.Session() as sess:
+        print(BatchColors.OKBLUE + 'Model restored from ' + model_path + BatchColors.ENDC)
+        saver_restore.restore(sess, model_path)
+
+        for m in range(0, len(data)):  # for each map
+            cur_data = data[m:m+1, :, :, :]
+            all_preds = []
+            all_gts = []
+            print('Map', instances[m])
+            print(cur_data.shape)
+
+            for i in range(0, ((len(class_dist) / batch_size)
+                              if (len(class_dist) % batch_size) == 0 else (len(class_dist) / batch_size) + 1)):
+                batch = list_index[i * batch_size:min(i * batch_size + batch_size, len(class_dist))]
+                b_x, by = dynamically_create_patches(cur_data, labels, crop_size, class_dist, batch)
+                normalize_images(b_x, mean_full, std_full)
+                bx = np.reshape(b_x, (len(cur_data), -1, n_input_data))
+
+                _logits, _pred = sess.run([logits, pred], feed_dict={x: bx, y: by, keep_prob: 1., is_training: False})
+                all_preds = np.concatenate((all_preds, _pred))
+                all_gts = np.concatenate((all_gts, by))
+
+            print(all_preds.shape)
+            print(all_gts.shape)
+            np.save(os.path.join(output_path, 'test_all_preds_' + instances[m].split('.')[0]), all_preds)
+            if first is True:
+                np.save(os.path.join(os.getcwd(), 'test_all_gts'), all_gts)
+                first = False
+
+    tf.reset_default_graph()
+
+
 '''
 Method for spatio-temporal (with branch nets) segmentation using whole time series
 '''
@@ -598,7 +661,7 @@ Method for spatio-temporal (with branch nets) segmentation using whole time seri
 
 def main():
     list_params = ['input_path', 'output_path (for model, images, etc)', 'model_path', 'instances',
-                   'learning_rate', 'weight_decay', 'batch_size', 'niter', 'crop_size', 'fold',
+                   'learning_rate', 'weight_decay', 'batch_size', 'niter', 'crop_size',
                    'operation [training|testing|full_test]']
     if len(sys.argv) < len(list_params) + 1:
         sys.exit('Usage: ' + sys.argv[0] + ' ' + ' '.join(list_params))
@@ -629,60 +692,35 @@ def main():
     index = index + 1
     crop_size = int(sys.argv[index])
     index = index + 1
-    fold = int(sys.argv[index])
-    index = index + 1
     operation = sys.argv[index]
 
-    print BatchColors.OKBLUE + 'Reading images...' + BatchColors.ENDC
+    print(BatchColors.OKBLUE + 'Reading images...' + BatchColors.ENDC)
     data, labels = load_images(input_path, crop_size, instances)
-    print data.shape, labels.shape
+    print(data.shape, labels.shape)
 
-    if operation == 'test_full':
-        _, non_class_distribution = create_distributions_over_pixel_classes(labels)
-    elif os.path.isfile(os.getcwd() + '/pixelwise_fold_' + str(fold) + '_train_class_distribution.npy'):
-        training_distribution = np.load(os.getcwd() + '/pixelwise_fold_' + str(fold) + '_train_class_distribution.npy')
-        test_distribution = np.load(os.getcwd() + '/pixelwise_fold_' + str(fold) + '_test_class_distribution.npy')
-        print BatchColors.OKGREEN + "Fold " + str(fold) + " loaded!" + BatchColors.ENDC
+    training_class_dist, testing_class_dist, no_class_dist = create_distributions_over_pixel_classes(labels)
+
+    if os.path.isfile(os.path.join(output_path, 'mean.npy')):
+        mean_full = np.squeeze(np.load(os.path.join(output_path, 'mean.npy')))
+        std_full = np.squeeze(np.load(os.path.join(output_path, 'std.npy')))
+        print(BatchColors.OKGREEN + 'Loaded Mean/Std from training instances' + BatchColors.ENDC)
     else:
-        print BatchColors.WARNING + "Could not locate old folds! New ones will be generated" + BatchColors.ENDC
-        print BatchColors.OKBLUE + 'Creating class distribution...' + BatchColors.ENDC
+        mean_full, std_full = calculate_mean_and_std(data, training_class_dist, crop_size)
+        np.save(os.path.join(output_path, 'mean.npy'), mean_full)
+        np.save(os.path.join(output_path, 'std.npy'), std_full)
+        print(BatchColors.OKGREEN + 'Created Mean/Std from training instances' + BatchColors.ENDC)
 
-        class_distribution, non_class_distribution = create_distributions_over_pixel_classes(labels)
-        index = np.asarray(class_distribution[0] + class_distribution[1] +
-                           class_distribution[2] + class_distribution[3])
-        labels = [0] * len(class_distribution[0]) + [1] * len(class_distribution[1]) + \
-                 [2] * len(class_distribution[2]) + [3] * len(class_distribution[3])
-        sss = StratifiedShuffleSplit(n_splits=5, train_size=0.8, test_size=0.2)
-        for (ff, (train_index, test_index)) in enumerate(sss.split(index, labels)):
-            print ff, len(train_index), len(test_index)
-            # TRAIN
-            np.save(os.getcwd() + '/pixelwise_fold_' + str(ff) + '_train_class_distribution.npy', index[train_index])
-            # TEST
-            np.save(os.getcwd() + '/pixelwise_fold_' + str(ff) + '_test_class_distribution.npy', index[test_index])
-        print BatchColors.WARNING + "Folds saved!" + BatchColors.ENDC
-        print BatchColors.WARNING + "Suggest to RUN all again with new folds!" + BatchColors.ENDC
-        print BatchColors.WARNING + "Starting from fold 0" + BatchColors.ENDC
-        training_distribution = np.load(os.getcwd() + '/pixelwise_fold_0_train_class_distribution.npy')
-        test_distribution = np.load(os.getcwd() + '/pixelwise_fold_0_test_class_distribution.npy')
-
-    if os.path.isfile(output_path + 'fold_' + str(fold) + '_mean.npy'):
-        mean_full = np.squeeze(np.load(output_path + 'fold_' + str(fold) + '_mean.npy'))
-        std_full = np.squeeze(np.load(output_path + 'fold_' + str(fold) + '_std.npy'))
-        print BatchColors.OKGREEN + 'Loaded Mean/Std from training instances' + BatchColors.ENDC
-    else:
-        mean_full, std_full = calculate_mean_and_std(data, training_distribution, crop_size)
-        np.save(output_path + 'fold_' + str(fold) + '_mean.npy', mean_full)
-        np.save(output_path + 'fold_' + str(fold) + '_std.npy', std_full)
-        print BatchColors.OKGREEN + 'Created Mean/Std from training instances' + BatchColors.ENDC
-
-    print mean_full.shape, std_full.shape
+    print(mean_full.shape, std_full.shape)
 
     # Network Parameters
     n_input_data = crop_size * crop_size * 3  # RGB
     dropout = 0.5  # Dropout, probability to keep units
 
     # tf Graph input_data
-    x = tf.placeholder(tf.float32, [len(data), None, n_input_data], name='ph_data')
+    if operation == 'testing_per_map':
+        x = tf.placeholder(tf.float32, [1, None, n_input_data], name='ph_data')
+    else:
+        x = tf.placeholder(tf.float32, [len(data), None, n_input_data], name='ph_data')
     y = tf.placeholder(tf.int32, [None], name='ph_labels')
 
     keep_prob = tf.placeholder(tf.float32)  # dropout (keep probability)
@@ -703,18 +741,20 @@ def main():
     pred = tf.argmax(logits, 1)
 
     if operation == 'training':
-        train(data, labels, training_distribution, test_distribution, mean_full, std_full,
+        train(data, labels, training_class_dist, testing_class_dist, mean_full, std_full,
               crop_size, batch_size, niter, model_path,
               x, y, keep_prob, dropout, is_training, n_input_data,
               optimizer, loss, acc_mean, pred, output_path)
-    elif operation == 'testing':
-        raise NotImplementedError
-    elif operation == 'test_full':
-        full_test(data, labels, non_class_distribution, mean_full, std_full,
+    elif operation == 'testing_per_map':
+        testing_per_map(data, labels, testing_class_dist, instances, mean_full, std_full,
+                        x, y, keep_prob, dropout, is_training, n_input_data, logits, pred,
+                        batch_size, crop_size, model_path, output_path)
+    elif operation == 'test_Full_map':
+        full_test(data, labels, no_class_dist, mean_full, std_full,
                   x, y, keep_prob, dropout, is_training, n_input_data, logits, pred,
                   batch_size, crop_size, model_path, output_path)
     else:
-        print BatchColors.FAIL + "Operation not found: " + operation + BatchColors.ENDC
+        print(BatchColors.FAIL + "Operation not found: " + operation + BatchColors.ENDC)
 
 
 if __name__ == "__main__":

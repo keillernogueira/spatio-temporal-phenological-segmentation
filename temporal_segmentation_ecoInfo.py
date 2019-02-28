@@ -4,7 +4,7 @@ import math
 from os import listdir
 import os
 import warnings
-
+import datetime
 import numpy as np
 import tensorflow as tf
 import scipy.misc
@@ -456,8 +456,8 @@ def train(data, labels, train_class_distribution, test_class_distribution,
           optimizer, loss, acc_mean, pred, output_path):
     ###################
     display_step = 50
-    epoch_number = 100  # int(len(training_classes)/batch_size) # 1 epoch = images / batch
-    val_inteval = 100  # int(len(training_classes)/batch_size)
+    epoch_number = 1000  # int(len(training_classes)/batch_size) # 1 epoch = images / batch
+    val_inteval = 1000  # int(len(training_classes)/batch_size)
     # print '1 epoch every %s iterations' % str(epoch_number)
     # print '1 validation every %s iterations' % str(val_inteval)
     # display_step = math.ceil(int(len(training_classes)/batch_size)*0.01)
@@ -517,7 +517,8 @@ def train(data, labels, train_class_distribution, test_class_distribution,
                     _sum += (batch_cm_train[i][i] / float(np.sum(batch_cm_train[i])) if np.sum(
                         batch_cm_train[i]) != 0 else 0)
 
-                print("Iter " + str(step) + " -- Training Minibatch: Loss= " + "{:.6f}".format(batch_loss) +
+                print("Iter " + str(step) + " -- Time " + str(datetime.datetime.now().time()) +
+                      " -- Training Minibatch: Loss= " + "{:.6f}".format(batch_loss) +
                       " Absolut Right Pred= " + str(int(batch_correct)) +
                       " Overall Accuracy= " + "{:.4f}".format(batch_correct / float(np.sum(np.sum(batch_cm_train)))) +
                       " Normalized Accuracy= " + "{:.4f}".format(_sum / float(NUM_CLASSES)) +

@@ -29,16 +29,16 @@ class BatchColors:
 
 
 def print_params(list_params):
-    print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-    for i in xrange(1, len(sys.argv)):
-        print list_params[i - 1] + '= ' + sys.argv[i]
-    print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    for i in range(1, len(sys.argv)):
+        print(list_params[i - 1] + '= ' + sys.argv[i])
+    print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
 
 def select_batch(shuffle, batch_size, it, total_size):
     batch = shuffle[it:min(it + batch_size, total_size)]
     if min(it + batch_size, total_size) == total_size or total_size == it + batch_size:
-        shuffle = np.asarray(random.sample(xrange(total_size), total_size))
+        shuffle = np.asarray(random.sample(range(total_size), total_size))
         # print "in", shuffle
         it = 0
         if len(batch) < batch_size:
@@ -66,7 +66,7 @@ def save_best_model(sess, output_path, acc, saver, max_to_keep=5):
             DICT_MODELS_ACC.append((output_path, acc))
             DICT_MODELS_ACC.sort(key=lambda tup: tup[1], reverse=True)
             saver.save(sess, output_path)
-    print DICT_MODELS_ACC
+    print(DICT_MODELS_ACC)
 
 
 def manipulate_border_array(data, crop_size):
@@ -108,7 +108,7 @@ def manipulate_border_array(data, crop_size):
 
 
 def normalize_images(data, mean_full, std_full):
-    for i in xrange(len(data)):
+    for i in range(len(data)):
         data[i, :, :, :, 0] = np.subtract(data[i, :, :, :, 0], mean_full[i, 0])
         data[i, :, :, :, 1] = np.subtract(data[i, :, :, :, 1], mean_full[i, 1])
         data[i, :, :, :, 2] = np.subtract(data[i, :, :, :, 2], mean_full[i, 2])
@@ -126,21 +126,21 @@ def compute_image_mean(data):
 
 
 def calculate_mean_and_std(data, indexes, crop_size):
-    mean_full = [[[] for i in range(0)] for i in xrange(len(data))]
-    std_full = [[[] for i in range(0)] for i in xrange(len(data))]
+    mean_full = [[[] for i in range(0)] for i in range(len(data))]
+    std_full = [[[] for i in range(0)] for i in range(len(data))]
     mask = int(crop_size / 2)
 
-    for cur_map in xrange(len(data)):
+    for cur_map in range(len(data)):
         all_patches = []
-        for i in xrange(len(indexes)):
+        for i in range(len(indexes)):
             cur_x = indexes[i][0]
             cur_y = indexes[i][1]
 
             patches = data[cur_map, (cur_x + mask) - mask:(cur_x + mask) + mask + 1,
                            (cur_y + mask) - mask:(cur_y + mask) + mask + 1, :]
             if len(patches) != crop_size or len(patches[1]) != crop_size:
-                print BatchColors.FAIL + "Error! Current patch size: " + str(len(patches)) + "x" + \
-                      str(len(patches[0])) + BatchColors.ENDC
+                print(BatchColors.FAIL + "Error! Current patch size: " + str(len(patches)) + "x" + \
+                      str(len(patches[0])) + BatchColors.ENDC)
                 return
 
             all_patches.append(patches)
@@ -152,10 +152,10 @@ def calculate_mean_and_std(data, indexes, crop_size):
     # check for 0.0 in the std -- since we are using it for divide the image, no 0's allowed
     # std_full[std_full == [0., 0., 0.]] = 1.0
 
-    print mean_full
-    print std_full
+    print(mean_full)
+    print(std_full)
     # print mean_full, std_full
-    return np.asarray(mean_full), np.asarray(std_full)
+    return np.squeeze(np.asarray(mean_full)), np.squeeze(np.asarray(std_full))
 
 
 def load_images(path,  crop_size, instances, clahe=False):
@@ -167,10 +167,10 @@ def load_images(path,  crop_size, instances, clahe=False):
         try:
             img = img_as_float(scipy.misc.imread(path + name))
         except IOError:
-            print BatchColors.FAIL + "Could not open file: ", path + name + BatchColors.ENDC
+            print(BatchColors.FAIL + "Could not open file: ", path + name + BatchColors.ENDC)
 
         if clahe is True:
-            print BatchColors.WARNING + "CLAHE image" + BatchColors.ENDC
+            print(BatchColors.WARNING + "CLAHE image" + BatchColors.ENDC)
             img = exposure.equalize_adapthist(img)
 
         if int(name.split('_')[1]) != cur_month:
@@ -190,7 +190,7 @@ def load_images(path,  crop_size, instances, clahe=False):
     try:
         img = scipy.misc.imread(path + "mask_gray.tif")
     except IOError:
-        print BatchColors.FAIL + "Could not open file: ", path + "mask_gray.tif" + BatchColors.ENDC
+        print(BatchColors.FAIL + "Could not open file: ", path + "mask_gray.tif" + BatchColors.ENDC)
 
     mask = img
 
@@ -203,16 +203,16 @@ def create_distributions_over_pixel_classes(labels):
 
     w, h = labels.shape
 
-    for i in xrange(0, w):
-        for j in xrange(0, h):
+    for i in range(0, w):
+        for j in range(0, h):
             if labels[i, j] != 4:
                 classes[labels[i, j]].append((i, j))
             else:
                 nonclasses.append((i, j))
 
-    for i in xrange(len(classes)):
-        print BatchColors.OKBLUE + "Class " + str(i) + " = " + str(len(classes[i])) + BatchColors.ENDC
-    print BatchColors.OKBLUE + 'Non class = ' + str(len(nonclasses)) + BatchColors.ENDC
+    for i in range(len(classes)):
+        print(BatchColors.OKBLUE + "Class " + str(i) + " = " + str(len(classes[i])) + BatchColors.ENDC)
+    print(BatchColors.OKBLUE + 'Non class = ' + str(len(nonclasses)) + BatchColors.ENDC)
     return classes, nonclasses
 
 
@@ -238,10 +238,10 @@ def dynamically_create_patches(data, mask_data, crop_size, class_distribution, s
         current_class = mask_data[cur_x, cur_y]
 
         if len(patch[0]) != crop_size or len(patch[1]) != crop_size:
-            print "Error: Current patch size ", len(patch), len(patch[0])
+            print("Error: Current patch size ", len(patch), len(patch[0]))
             return
         if current_class != 0 and current_class != 1 and current_class != 2 and current_class != 3 and current_class != 4:
-            print "Error: Current class is mistaken", current_class
+            print("Error: Current class is mistaken", current_class)
             return
 
         if i < len(class_distribution):
@@ -346,7 +346,7 @@ def convnet_initial(x, dropout, is_training, weight_decay, crop_size, name_prefi
 def convnet_25_temporal(x, dropout, dropout_connection, is_training, crop_size, weight_decay):
     pools = []
 
-    for i in xrange(12):
+    for i in range(12):
         pools.append(convnet_initial(x[i], dropout, is_training, weight_decay, crop_size, 'time_' + str(i)))
 
     # conv1 = _conv_layer(x, [4, 4, 3, 64], 'ft_conv1', weight_decay, is_training, pad='VALID')
@@ -434,7 +434,7 @@ def validate(sess, data, labels, test_distribution, crop_size, mean_full, std_fu
             cm_test[by[j]][preds_val[j]] += 1
 
     _sum = 0.0
-    for i in xrange(len(cm_test)):
+    for i in range(len(cm_test)):
         _sum += (cm_test[i][i] / float(np.sum(cm_test[i])) if np.sum(cm_test[i]) != 0 else 0)
 
     print("---- Iter " + str(step) + " -- Validate: Overall Accuracy= " + str(int(true_count)) +
@@ -467,17 +467,20 @@ def train(data, labels, all_class_distribution, mean_full, std_full,
 
     # Initializing the variables
     init = tf.initialize_all_variables()
-    shuffle = np.asarray(random.sample(xrange(3 * len(all_class_distribution)), 3 * len(all_class_distribution)))
+    shuffle = np.asarray(random.sample(range(3 * len(all_class_distribution)), 3 * len(all_class_distribution)))
+
+    tfconfig = tf.ConfigProto(allow_soft_placement=True)
+    tfconfig.gpu_options.allow_growth = True
 
     # Launch the graph
-    with tf.Session() as sess:
+    with tf.Session(config=tfconfig) as sess:
         if 'model' in model_path:
-            current_iter = int(model_path.split('-')[-1])
-            print BatchColors.OKBLUE + 'Model restored from ' + model_path + BatchColors.ENDC
+            current_iter = int(model_path.split('/')[-1].split('_')[-1])
+            print(BatchColors.OKBLUE + 'Model restored from ' + model_path + BatchColors.ENDC)
             saver_restore.restore(sess, model_path)
         else:
             sess.run(init)
-            print BatchColors.OKBLUE + 'Model totally initialized!' + BatchColors.ENDC
+            print(BatchColors.OKBLUE + 'Model totally initialized!' + BatchColors.ENDC)
 
         # aux variables
         it = 0
@@ -486,7 +489,7 @@ def train(data, labels, all_class_distribution, mean_full, std_full,
         batch_cm_train = np.zeros((NUM_CLASSES, NUM_CLASSES), dtype=np.uint32)
 
         # Keep training until reach max iterations
-        for step in xrange(current_iter, niter + 1):
+        for step in range(current_iter, niter + 1):
             shuffle, batch, it = select_batch(shuffle, batch_size, it, 3 * len(all_class_distribution))
 
             b_x, batch_y = dynamically_create_patches(data, labels, crop_size, all_class_distribution, batch)
@@ -510,7 +513,7 @@ def train(data, labels, all_class_distribution, mean_full, std_full,
                     batch_cm_train[batch_y[j]][batch_predcs[j]] += 1
 
                 _sum = 0.0
-                for i in xrange(len(batch_cm_train)):
+                for i in range(len(batch_cm_train)):
                     _sum += (batch_cm_train[i][i] / float(np.sum(batch_cm_train[i])) if np.sum(
                         batch_cm_train[i]) != 0 else 0)
 
@@ -524,7 +527,7 @@ def train(data, labels, all_class_distribution, mean_full, std_full,
 
             if step % epoch_number == 0:
                 _sum = 0.0
-                for i in xrange(len(epoch_cm_train)):
+                for i in range(len(epoch_cm_train)):
                     _sum += (epoch_cm_train[i][i] / float(np.sum(epoch_cm_train[i])) if np.sum(
                         epoch_cm_train[i]) != 0 else 0)
 
@@ -545,7 +548,7 @@ def train(data, labels, all_class_distribution, mean_full, std_full,
                                     is_training, pred, acc_mean, step)
                 save_best_model(sess, output_path + 'model_' + str(step), norm_acc, saver)
 
-        print BatchColors.OKGREEN + "Optimization Finished!" + BatchColors.ENDC
+        print(BatchColors.OKGREEN + "Optimization Finished!" + BatchColors.ENDC)
 
         # Test: Final
         # saver.save(sess, output_path + 'model', global_step=step)
@@ -564,7 +567,7 @@ def test(test_data, labels, all_class_distribution, mean_full, std_full,
 
     # Launch the graph
     with tf.Session() as sess:
-        print BatchColors.OKBLUE + 'Model restored from ' + model_path + BatchColors.ENDC
+        print(BatchColors.OKBLUE + 'Model restored from ' + model_path + BatchColors.ENDC)
         saver_restore.restore(sess, model_path)
 
         validate(sess, test_data, labels, all_class_distribution, crop_size, mean_full, std_full,
@@ -581,7 +584,7 @@ Method for spatio-temporal (with branch nets) segmentation using cycle of one ye
 def main():
     list_params = ['input_path', 'output_path (for model, images, etc)', 'model_path', 'training_instances',
                    'testing_instances', 'learning_rate', 'weight_decay', 'batch_size', 'niter', 'crop_size',
-                   'operation [training|testing]']
+                   'operation [training|testing]', 'dropout_rate (12 default)']
     if len(sys.argv) < len(list_params) + 1:
         sys.exit('Usage: ' + sys.argv[0] + ' ' + ' '.join(list_params))
     print_params(list_params)
@@ -615,14 +618,16 @@ def main():
     crop_size = int(sys.argv[index])
     index = index + 1
     operation = sys.argv[index]
+    index = index + 1
+    dropout_rate = float(sys.argv[index])
 
-    print BatchColors.OKBLUE + 'Reading images...' + BatchColors.ENDC
+    print(BatchColors.OKBLUE + 'Reading images...' + BatchColors.ENDC)
     data, labels = load_images(input_path, crop_size, training_instances, clahe=False)
-    print data.shape, labels.shape
+    print(data.shape, labels.shape)
     test_data, _ = load_images(input_path, crop_size, testing_instances, clahe=False)
-    print test_data.shape
+    print(test_data.shape)
 
-    print BatchColors.OKBLUE + 'Creating class distribution...' + BatchColors.ENDC
+    print(BatchColors.OKBLUE + 'Creating class distribution...' + BatchColors.ENDC)
     class_distribution, non_class_distribution = create_distributions_over_pixel_classes(labels)
     all_class_distribution = np.asarray(class_distribution[0] + class_distribution[1] +
                                         class_distribution[2] + class_distribution[3])
@@ -630,17 +635,17 @@ def main():
     if os.path.isfile(output_path + 'mean.npy'):
         mean_full = np.squeeze(np.load(output_path + 'mean.npy'))
         std_full = np.squeeze(np.load(output_path + 'std.npy'))
-        print BatchColors.OKGREEN + 'Loaded Mean/Std from training instances' + BatchColors.ENDC
+        print(BatchColors.OKGREEN + 'Loaded Mean/Std from training instances' + BatchColors.ENDC)
     else:
         mean_full, std_full = calculate_mean_and_std(data, all_class_distribution, crop_size)
         np.save(output_path + 'mean.npy', mean_full)
         np.save(output_path + 'std.npy', std_full)
-        print BatchColors.OKGREEN + 'Created Mean/Std from training instances' + BatchColors.ENDC
+        print(BatchColors.OKGREEN + 'Created Mean/Std from training instances' + BatchColors.ENDC)
 
     # Network Parameters
     n_input_data = crop_size * crop_size * 3  # RGB
     dropout = 0.5  # Dropout, probability to keep units
-    dropout_connection = (1/12.0)
+    dropout_connection = (dropout_rate/12)  # drop/time serie length
 
     # tf Graph input_data
     x = tf.placeholder(tf.float32, [12, None, n_input_data], name='ph_data')
@@ -677,7 +682,7 @@ def main():
              crop_size, batch_size, model_path, x, y, keep_prob, keep_prob_connection,
              is_training, n_input_data, acc_mean, pred)
     else:
-        print BatchColors.FAIL + "Operation not found: " + operation + BatchColors.ENDC
+        print(BatchColors.FAIL + "Operation not found: " + operation + BatchColors.ENDC)
 
 
 if __name__ == "__main__":
