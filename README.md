@@ -1,5 +1,12 @@
 # Spatio-Temporal Vegetation Segmentation By Using Convolutional Networks
 
+<p align="center">
+<figure>
+  <img src="datasets.png" alt="Obtained Results" width="500">
+  <figcaption>Figure 1. Examples of phenological images exploited in this work.</figcaption>
+</figure> 
+</p>
+
 Plant phenology studies rely on long-term monitoring of life cycles of plants.
 High-resolution unmanned aerial vehicles (UAVs) and near-surface technologies have been used for plant monitoring, demanding the creation of methods capable of locating and identifying plant species through time and space.
 However, this is a challenging task given the high volume of data, the constant data missing from temporal dataset, the heterogeneity of temporal profiles, the variety of plant visual patterns, and the unclear definition of individuals’ boundaries in plant communities.
@@ -11,7 +18,7 @@ Experimental results show that the proposed approach is effective, overcoming ot
 
 If you use this code in your research, please consider citing:
 
-    @article{nogueiraGRSL2018Flooding,
+    @article{nogueiraGRSL2019spatio,
         author = {Keiller Nogueira and Jefersson A. dos Santos and Nathalia Menini and Thiago S. F. Silva and Leonor Patricia Morellato and Ricardo da S. Torres}
         title = {Spatio-Temporal Vegetation Pixel Classification By Using Convolutional Networks},
         journal = {{IEEE} Geoscience and Remote Sensing Letters},
