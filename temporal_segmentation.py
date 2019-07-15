@@ -565,7 +565,28 @@ def train(data, labels, training_distribution, test_distribution, mean_full, std
 def full_test(data, labels, non_classified_pixels_distribution, mean_full, std_full,
               x, y, keep_prob, dropout, is_training, n_input_data, logits, pred,
               batch_size, crop_size, model_path, output_path):
-
+    """
+    This function is used to classify the pixels of the images that do not have ground-truth.
+    It was used in an attempt to do some open-set.
+    :param data: images
+    :param labels: labels
+    :param non_classified_pixels_distribution: distribution of pixels that do not have class
+    :param mean_full: mean from training set
+    :param std_full: std from training set
+    :param x: tf.placeholder for data
+    :param y: tf.placeholder from label
+    :param keep_prob: tf.placeholder for dropout
+    :param dropout: value of dropout
+    :param is_training: tf.placeholder for batch normalization
+    :param n_input_data: dimension of input data
+    :param logits: logits
+    :param pred: prediction
+    :param batch_size: batch size
+    :param crop_size: crop size
+    :param model_path: model to load
+    :param output_path: output path
+    :return: None
+    """
     h, w = labels.shape
     new_labels = labels
     new_logits_map = np.zeros([h, w, NUM_CLASSES], dtype=np.float32)
@@ -618,6 +639,30 @@ def full_test(data, labels, non_classified_pixels_distribution, mean_full, std_f
 def testing_per_map(data, labels, class_dist, instances, mean_full, std_full,
                     x, y, keep_prob, dropout, is_training, n_input_data, logits, pred,
                     batch_size, crop_size, model_path, output_path):
+    """
+    This function is used to extract features from distinct images.
+    For example, suppose a model was trained using image with timestamps 1, 3, 5.
+    This function can be used to extract features from images from distinct timestamps, such as 2, 4, 6.
+    :param data: images
+    :param labels: labels
+    :param class_dist: distribution of classes
+    :param instances: which timestamps will be processed
+    :param mean_full: mean from training set
+    :param std_full: std from training set
+    :param x: tf.placeholder for data
+    :param y: tf.placeholder from label
+    :param keep_prob: tf.placeholder for dropout
+    :param dropout: value of dropout
+    :param is_training: tf.placeholder for batch normalization
+    :param n_input_data: dimension of input data
+    :param logits: logits
+    :param pred: prediction
+    :param batch_size: batch size
+    :param crop_size: crop size
+    :param model_path: model to load
+    :param output_path: output path
+    :return: None
+    """
     list_index = np.arange(len(class_dist))
     saver_restore = tf.train.Saver()
     first = True
@@ -654,6 +699,42 @@ def testing_per_map(data, labels, class_dist, instances, mean_full, std_full,
     tf.reset_default_graph()
 
 
+def testing(data, labels, test_distribution, mean_full, std_full,
+            x, y, keep_prob, dropout, is_training, n_input_data, pred, acc_mean,
+            batch_size, crop_size, model_path):
+    """
+    This function is used to classify the testing pixels using a trained model.
+    :param data: images
+    :param labels: labels
+    :param test_distribution: distribution of test pixels
+    :param mean_full: mean from training set
+    :param std_full: std from training set
+    :param x: tf.placeholder for data
+    :param y: tf.placeholder from label
+    :param keep_prob: tf.placeholder for dropout
+    :param dropout: value of dropout
+    :param is_training: tf.placeholder for batch normalization
+    :param n_input_data: dimension of input data
+    :param pred: prediction
+    :param acc_mean: prediction mean
+    :param batch_size: batch size
+    :param crop_size: crop size
+    :param model_path: model to load
+    :return: None
+    """
+    saver_restore = tf.train.Saver()
+
+    with tf.Session() as sess:
+        current_iter = int(model_path.split('_')[-1])
+        print(BatchColors.OKBLUE + 'Model restored from ' + model_path + BatchColors.ENDC)
+        saver_restore.restore(sess, model_path)
+
+        validate(sess, data, labels, test_distribution, crop_size, mean_full, std_full,
+                 n_input_data, batch_size, x, y, keep_prob, is_training, pred, acc_mean, current_iter)
+
+    tf.reset_default_graph()
+
+
 '''
 Method for spatio-temporal (with branch nets) segmentation using whole time series
 '''
@@ -662,7 +743,7 @@ Method for spatio-temporal (with branch nets) segmentation using whole time seri
 def main():
     list_params = ['input_path', 'output_path (for model, images, etc)', 'model_path', 'instances',
                    'learning_rate', 'weight_decay', 'batch_size', 'niter', 'crop_size',
-                   'operation [training|testing|full_test]']
+                   'operation [training|testing|testing_per_map|test_full_map]']
     if len(sys.argv) < len(list_params) + 1:
         sys.exit('Usage: ' + sys.argv[0] + ' ' + ' '.join(list_params))
     print_params(list_params)
@@ -745,11 +826,15 @@ def main():
               crop_size, batch_size, niter, model_path,
               x, y, keep_prob, dropout, is_training, n_input_data,
               optimizer, loss, acc_mean, pred, output_path)
+    elif operation == 'testing':
+        testing(data, labels, testing_class_dist, mean_full, std_full,
+                x, y, keep_prob, dropout, is_training, n_input_data, pred, acc_mean,
+                batch_size, crop_size, model_path)
     elif operation == 'testing_per_map':
         testing_per_map(data, labels, testing_class_dist, instances, mean_full, std_full,
                         x, y, keep_prob, dropout, is_training, n_input_data, logits, pred,
                         batch_size, crop_size, model_path, output_path)
-    elif operation == 'test_Full_map':
+    elif operation == 'test_full_map':
         full_test(data, labels, no_class_dist, mean_full, std_full,
                   x, y, keep_prob, dropout, is_training, n_input_data, logits, pred,
                   batch_size, crop_size, model_path, output_path)
